@@ -15,11 +15,9 @@ input.onButtonPressed(Button.B, () => {
 
 basic.forever(function () {
     led.unplot(x, y);
-    led.unplot(toFixed(x + 1), toFixed(y + 1));
     x = toFixed(input.rotation(Rotation.Roll) / 10);
     y = toFixed(input.rotation(Rotation.Pitch) / 10);
     led.plot(x, y);
-    led.plot(toFixed(x + 1), toFixed(y + 1));
 });
 
 function toFixed(i: number) {
