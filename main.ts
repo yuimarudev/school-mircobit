@@ -11,19 +11,8 @@ function toFixed(i: number) {
     return Math.floor(i);
 }
 
-input.onButtonPressed(Button.A, function () {
-    led.enable(true);
-});
-
-input.onButtonPressed(Button.B, function () {
-    led.enable(false);
-});
-
-input.onShake(() => {
-    music.playTone(Note.CSharp4, 100);
-});
-
 basic.forever(function () {
+    if (input.logoIsPressed()) music.playTone(Note.G4, 10);
     const locX = toFixed(input.rotation(Rotation.Roll) / 10);
     const locY = toFixed(input.rotation(Rotation.Pitch) / 10);
     if (locX !== x || locY !== y) led.unplot(x, y);
@@ -52,13 +41,20 @@ bluetooth.onUartDataReceived(serial.delimiters(Delimiters.NewLine), () => {
             }
             bluetooth.uartWriteString(JSON.stringify(res));
             break;
+        case 2:
+            res = {
+                type: 2,
+                level: input.lightLevel()
+            };
+            bluetooth.uartWriteString(JSON.stringify(res));
+            break;
     }
 });
 
 bluetooth.startUartService();
 
-type Query = TempertureQuery | CompassQuery;
-type Response = TempertureQueryResponse | CompassQueryResponse;
+type Query = TempertureQuery | CompassQuery | LightQuery;
+type Response = TempertureQueryResponse | CompassQueryResponse | LightQueryResponse;
 
 interface TempertureQuery {
     type: 0
@@ -76,4 +72,13 @@ interface CompassQuery {
 interface CompassQueryResponse {
     type: 1,
     vec: number
+}
+
+interface LightQuery {
+    type: 2
+}
+
+interface LightQueryResponse {
+    type: 2,
+    level: number
 }
