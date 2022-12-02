@@ -20,7 +20,7 @@ input.onButtonPressed(Button.B, function () {
 });
 
 input.onShake(() => {
-    music.playTone(Note.GSharp3, 100);
+    music.playTone(Note.CSharp4, 100);
 });
 
 basic.forever(function () {
@@ -31,3 +31,49 @@ basic.forever(function () {
     x = locX;
     y = locY;
 });
+
+bluetooth.onUartDataReceived(serial.delimiters(Delimiters.NewLine), () => {
+    const query = bluetooth.uartReadUntil(serial.delimiters(Delimiters.NewLine));
+    const parsed = JSON.parse(query.slice(0, query.length - 1)) as Query;
+    let res: Response;
+
+    switch (parsed.type) {
+        case 0:
+            res = {
+                type: 0,
+                temp: input.temperature()
+            };
+            bluetooth.uartWriteString(JSON.stringify(res));
+            break;
+        case 1:
+            res = {
+                type: 1,
+                vec: input.compassHeading()
+            }
+            bluetooth.uartWriteString(JSON.stringify(res));
+            break;
+    }
+});
+
+bluetooth.startUartService();
+
+type Query = TempertureQuery | CompassQuery;
+type Response = TempertureQueryResponse | CompassQueryResponse;
+
+interface TempertureQuery {
+    type: 0
+}
+
+interface TempertureQueryResponse {
+    type: 0,
+    temp: number
+}
+
+interface CompassQuery {
+    type: 1,
+}
+
+interface CompassQueryResponse {
+    type: 1,
+    vec: number
+}
