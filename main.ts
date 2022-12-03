@@ -23,8 +23,15 @@ basic.forever(function () {
 
 bluetooth.onUartDataReceived(serial.delimiters(Delimiters.NewLine), () => {
     const query = bluetooth.uartReadUntil(serial.delimiters(Delimiters.NewLine));
-    const parsed = JSON.parse(query.slice(0, query.length - 1)) as Query;
-    let res: Response;
+    let parsed: Query = {
+        type: 255
+    };
+
+    try {
+        parsed = JSON.parse(query.slice(0, query.length - 1));
+    } catch { }
+
+    let res: Response = { type: 255 };
 
     switch (parsed.type) {
         case 0:
@@ -32,29 +39,28 @@ bluetooth.onUartDataReceived(serial.delimiters(Delimiters.NewLine), () => {
                 type: 0,
                 temp: input.temperature()
             };
-            bluetooth.uartWriteString(JSON.stringify(res));
             break;
         case 1:
             res = {
                 type: 1,
                 vec: input.compassHeading()
             }
-            bluetooth.uartWriteString(JSON.stringify(res));
             break;
         case 2:
             res = {
                 type: 2,
                 level: input.lightLevel()
             };
-            bluetooth.uartWriteString(JSON.stringify(res));
             break;
     }
+
+    bluetooth.uartWriteString(JSON.stringify(res) + "\n");
 });
 
 bluetooth.startUartService();
 
-type Query = TempertureQuery | CompassQuery | LightQuery;
-type Response = TempertureQueryResponse | CompassQueryResponse | LightQueryResponse;
+type Query = TempertureQuery | CompassQuery | LightQuery | InvalidQuery;
+type Response = TempertureQueryResponse | CompassQueryResponse | LightQueryResponse | InvalidQueryResponse;
 
 interface TempertureQuery {
     type: 0
@@ -81,4 +87,12 @@ interface LightQuery {
 interface LightQueryResponse {
     type: 2,
     level: number
+}
+
+interface InvalidQuery {
+    type: 255
+}
+
+interface InvalidQueryResponse {
+    type: 255
 }
